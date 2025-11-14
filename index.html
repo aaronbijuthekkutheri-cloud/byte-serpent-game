@@ -11,23 +11,38 @@
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
     .card{background:rgba(255,255,255,0.03);padding:18px;border-radius:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6);display:flex;gap:18px;align-items:center}
     canvas{background:linear-gradient(180deg,#071422,#08202b);border-radius:8px;display:block}
-    .hud{display:flex;flex-direction:column;gap:10px;min-width:180px}
+
+    /* FIX: HUD width locked so Reset All never disappears */
+    .hud{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-width:200px; 
+      width:200px;      /* THIS FIXES THE MOBILE ISSUE */
+    }
 
     .hud .row{display:flex;justify-content:space-between;align-items:center}
     .btn{background:transparent;border:1px solid rgba(255,255,255,0.07);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
     .btn.primary{border-color:var(--accent);color:var(--accent)}
-
-    /* NEW BUTTON STYLE for Reset All */
-    .btn.danger{
-      border-color:#ff5555;
-      color:#ff7777;
-    }
-
+    .btn.danger{border-color:#ff5555;color:#ff7777}
     .hint{font-size:13px;color:var(--muted)}
     .big{font-size:20px;font-weight:600}
-    @media(max-width:720px){.card{flex-direction:column}}
 
-    /* Title above the HUD */
+    @media(max-width:720px){
+      .card{flex-direction:column}
+    }
+
+    /* Title above Canvas */
+    .playwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+    .title{
+      font-size:26px;
+      font-weight:700;
+      color:#0b6b44;
+      text-shadow:0 0 6px rgba(11,107,68,0.28);
+      margin-bottom:4px
+    }
+
+    /* Title above HUD */
     .sideTitle{
       text-align:center;
       font-size:28px;
@@ -36,10 +51,6 @@
       color:white;
     }
 
-    /* Title above canvas */
-    .playwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-    .title{font-size:26px;font-weight:700;color:#0b6b44;text-shadow:0 0 6px rgba(11,107,68,0.28);margin-bottom:4px}
-    
   </style>
 </head>
 <body>
@@ -58,7 +69,7 @@
         <div class="row"><div class="big">Best</div><div id="best">0</div></div>
         <div class="row"><div class="hint">Speed</div><div id="speed">6</div></div>
 
-        <!-- RESET ALL BUTTON RIGHT BELOW SPEED (minimum gap) -->
+        <!-- Reset All stays EXACTLY where you originally had it -->
         <button id="resetAll" class="btn danger">Reset All</button>
 
         <div style="display:flex;gap:8px;margin-top:4px;">
