@@ -88,6 +88,7 @@
             width: 100%; 
             max-width: 480px; 
             margin-top: 0; 
+            /* Tighter gap between score rows */
             gap: 5px; 
             padding: 10px 0; 
         }
@@ -97,6 +98,7 @@
         .hud .row .big {
             font-size: 16px; 
         }
+        /* Constrain the width of the score rows and the button container */
         .hud .row, .hud-footer, #mobile-reset-all-container {
             max-width: 300px; 
             width: 100%;
@@ -146,7 +148,7 @@
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* 🔥 MODIFIED: Mobile Button for Reset All is now tighter against the score */
+        /* ✅ FINAL FIX: Mobile Button for Reset All is now tight against the score */
         #mobile-reset-all-container {
             display: flex;
             /* Added margin-top/padding-top and a border-top to visually separate it from the Score/Best */
