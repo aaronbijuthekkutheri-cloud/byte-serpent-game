@@ -146,14 +146,13 @@
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* Mobile Button for Reset All (Container inside HUD now) */
+        /* 🔥 MODIFIED: Mobile Button for Reset All is now tighter against the score */
         #mobile-reset-all-container {
             display: flex;
-            /* Add a little bottom margin to separate it from the score */
-            margin-bottom: 15px; 
-            /* Remove the unnecessary top margin and padding that was there before */
-            margin-top: 0;
-            padding: 0;
+            /* Added margin-top/padding-top and a border-top to visually separate it from the Score/Best */
+            margin: 5px auto 0 auto; 
+            padding-top: 5px; 
+            border-top: 1px solid rgba(255, 255, 255, 0.05); 
         }
         
         /* Make all buttons in the row equal width */
