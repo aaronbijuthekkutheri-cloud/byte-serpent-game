@@ -87,11 +87,11 @@
         .hud{
             width: 100%; 
             max-width: 480px; 
-            /* 🔥 FINAL FIX: Ensure HUD itself has NO margin at all. */
+            /* 🔥 FINAL FIX: Ensure HUD itself has no top/bottom margin */
             margin: 0 auto; 
             /* Tighter gap between score rows */
             gap: 5px; 
-            /* FINAL FIX: Set padding to 0, 0, 10px, 0. This is the main score container. */
+            /* 🔥 FINAL FIX: Set padding to 0, 0, 10px, 0. This is the main score container. */
             padding: 0 0 10px 0; 
         }
         .hud .row{
@@ -153,14 +153,13 @@
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* 🔥 THE SOLUTION: Mobile Button for Reset All is placed immediately after the speed row */
+        /* Mobile Button for Reset All is placed immediately after the speed row */
         #mobile-reset-all-container {
             display: flex;
-            /* Small margin-top to separate it slightly from the Speed row */
-            margin: 5px auto 0 auto; 
-            /* Removed the border and padding-top that caused space */
-            padding-top: 0; 
-            border-top: none; 
+            /* Top margin to slightly separate it from the Speed row (which is the element right before it) */
+            margin: 10px auto 0 auto; 
+            padding-top: 5px; 
+            border-top: 1px solid rgba(255, 255, 255, 0.05); 
         }
         
         /* Make all buttons in the row equal width */
