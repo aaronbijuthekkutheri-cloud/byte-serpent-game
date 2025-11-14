@@ -120,42 +120,49 @@
             margin: 15px auto 0;
         }
         
-        /* MODIFIED: Hide the Title and Hints in the HUD on mobile */
-        .hud > .desktop-title, .hud > .hint { /* Added desktop-title class selector */
+        /* MODIFIED: Hide the Desktop Title and Hints in the HUD on mobile */
+        .hud > .desktop-title, .hud > .hint { 
              display: none !important; 
         }
         
-        /* MODIFIED: Ensure the mobile title is visible */
+        /* MODIFIED: Show the mobile title above the canvas */
         .playwrap .mobile-title {
             display: block !important;
+            margin-bottom: 10px; /* Add space between title and canvas */
         }
 
-        /* Use a dedicated, smaller area for the start/reset buttons on mobile */
-        #mobile-buttons {
+        /* MODIFIED: Adjust mobile buttons container to hold the start/reset buttons in a row */
+        #mobile-buttons-row {
             display: flex;
             gap: 8px;
             max-width: 300px;
             width: 100%;
             margin: 0 auto 10px auto; 
             padding: 10px 0 0 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* MODIFIED: Ensure the Reset All button uses 100% width on mobile */
-        /* The reset-all button is now moved into the #mobile-buttons container, 
-           so this style applies to the new button inside that container. */
-        #mobile-buttons .btn.danger {
+        /* MODIFIED: Reset All button takes up its own row */
+        #mobile-reset-all-container {
+            display: flex;
+            max-width: 300px;
             width: 100%;
-            margin-top: 8px; /* Add slight separation */
+            margin: 0 auto 10px auto;
         }
+        
+        /* MODIFIED: Make all buttons in the row equal width */
+        #mobile-buttons-row .btn, #mobile-reset-all-container .btn {
+            flex-grow: 1;
+            width: 100%;
+        }
+
         /* MODIFIED: Hide the desktop-only reset-all container on mobile */
         .hud-footer {
             display: none; 
         }
     }
     
-    /* MODIFIED: Hide mobile-specific div on desktop */
-    #mobile-buttons, .playwrap .mobile-title {
+    /* MODIFIED: Hide mobile-specific containers on desktop */
+    #mobile-buttons-row, #mobile-reset-all-container, .playwrap .mobile-title {
         display: none;
     }
     
@@ -278,12 +285,15 @@
         </div>
         
       </div>
-      <div id="mobile-buttons">
+      <div id="mobile-buttons-row">
           <button id="start-mobile" class="btn primary">Start</button>
           <button id="reset-mobile" class="btn">Reset</button>
-          <button id="reset-all-mobile" class="btn danger">Reset All</button> 
       </div>
       
+      <div id="mobile-reset-all-container">
+          <button id="reset-all-mobile" class="btn danger">Reset All</button>
+      </div>
+
       <div class="hud">
         <div class="title desktop-title">Byte Serpent</div>
         <div class="row"><div class="big">Score</div><div id="score">0</div></div>
@@ -329,12 +339,12 @@ const resetBtn = document.getElementById('reset');
 const startMobileBtn = document.getElementById('start-mobile');
 const resetMobileBtn = document.getElementById('reset-mobile');
 
-// MODIFIED: Renamed old resetAll to desktop, created new mobile resetAll
+// Reset All Buttons
 const resetAllDesktopBtn = document.getElementById('reset-all-desktop');
 const resetAllMobileBtn = document.getElementById('reset-all-mobile');
 
 
-// MODIFIED: Now we reference both titles, the active one will be styled
+// Title Elements
 const desktopTitleEl = document.querySelector('.desktop-title'); 
 const mobileTitleEl = document.querySelector('.mobile-title'); 
 
@@ -462,8 +472,8 @@ function resetGame(){
   // Reset styles on game reset
   desktopTitleEl.style.color = '';
   desktopTitleEl.style.textShadow = '';
-  mobileTitleEl.style.color = ''; // MODIFIED: Reset mobile title style
-  mobileTitleEl.style.textShadow = ''; // MODIFIED: Reset mobile title style
+  mobileTitleEl.style.color = ''; 
+  mobileTitleEl.style.textShadow = ''; 
   canvas.style.boxShadow = '';
   
   // Set ALL elements to "alive" green color (var(--accent) is #22c55e)
@@ -564,7 +574,7 @@ function gameOver(){
   // Apply colors and glows
   canvas.style.boxShadow = canvasGlow;
   
-  // MODIFIED: Apply styling to BOTH titles
+  // Apply styling to BOTH titles
   desktopTitleEl.style.color = primaryColor;
   desktopTitleEl.style.textShadow = shadowGlow;
   mobileTitleEl.style.color = primaryColor;
@@ -719,16 +729,14 @@ window.addEventListener('keydown', e => {
 // DESKTOP button listeners
 startBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', resetGame);
-resetAllDesktopBtn.addEventListener('click', showResetAllConfirmation); // MODIFIED: Desktop listener
+resetAllDesktopBtn.addEventListener('click', showResetAllConfirmation); 
 
 // MOBILE button listeners
 startMobileBtn.addEventListener('click', startGame);
 resetMobileBtn.addEventListener('click', resetGame);
-resetAllMobileBtn.addEventListener('click', showResetAllConfirmation); // MODIFIED: Mobile listener
+resetAllMobileBtn.addEventListener('click', showResetAllConfirmation); 
 
 // --- Event Listeners for Custom Modal ---
-// MODIFIED: Removed the single `resetAllBtn` listener as it's now handled by the specific desktop/mobile buttons above.
-
 confirmYesBtn.addEventListener('click', executeResetAll);
 confirmNoBtn.addEventListener('click', () => {
     confirmModal.style.display = 'none';
@@ -736,22 +744,29 @@ confirmNoBtn.addEventListener('click', () => {
 
 // --- Dynamic Element Reordering for Mobile View ---
 (function dynamicLayoutAdjustment() {
-    // MODIFIED: Use the client width for more accurate mobile detection in JS
     const isMobile = window.innerWidth <= 720; 
     const desktopButtonsContainer = document.getElementById('desktop-buttons');
-    const mobileButtonsContainer = document.getElementById('mobile-buttons');
+    const mobileButtonsRow = document.getElementById('mobile-buttons-row');
+    const mobileResetAllContainer = document.getElementById('mobile-reset-all-container');
+
 
     if (isMobile) {
         const card = document.querySelector('.card');
         const playwrap = document.querySelector('.playwrap');
         const hud = document.querySelector('.hud');
         
-        // Desired order on mobile: Playwrap (Canvas/Controls) -> Mobile Buttons -> HUD (Score/ResetAll)
-        if (card && playwrap && hud && mobileButtonsContainer) {
+        // Desired order on mobile:
+        // 1. Playwrap (Title, Canvas, Controls)
+        // 2. Mobile Buttons Row (Start/Reset)
+        // 3. Mobile Reset All Container (Reset All)
+        // 4. HUD (Score/Best/Speed)
+        
+        if (card && playwrap && hud && mobileButtonsRow && mobileResetAllContainer) {
             // Re-order the children of the card container
             card.appendChild(playwrap); 
-            card.appendChild(mobileButtonsContainer);
-            card.appendChild(hud); 
+            card.appendChild(mobileButtonsRow); // Start/Reset buttons
+            card.appendChild(mobileResetAllContainer); // Reset All button
+            card.appendChild(hud); // Score/Best/Speed
         }
         
         // Hide desktop-only buttons
@@ -759,16 +774,19 @@ confirmNoBtn.addEventListener('click', () => {
              desktopButtonsContainer.style.display = 'none';
         }
         
-        // MODIFIED: Hide the desktop footer containing the old Reset All button
+        // Hide the desktop footer containing the old Reset All button
         const hudFooter = document.querySelector('.hud-footer');
         if (hudFooter) {
             hudFooter.style.display = 'none';
         }
 
     } else {
-        // Hide mobile-only button container on desktop
-        if (mobileButtonsContainer) {
-            mobileButtonsContainer.style.display = 'none';
+        // Hide mobile-only containers on desktop
+        if (mobileButtonsRow) {
+            mobileButtonsRow.style.display = 'none';
+        }
+        if (mobileResetAllContainer) {
+            mobileResetAllContainer.style.display = 'none';
         }
     }
 })();
