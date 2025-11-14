@@ -120,9 +120,14 @@
             margin: 15px auto 0;
         }
         
-        /* FIX: Hide the Title and Hints in the HUD on mobile */
-        .hud > .title, .hud > .hint { 
+        /* MODIFIED: Hide the Title and Hints in the HUD on mobile */
+        .hud > .desktop-title, .hud > .hint { /* Added desktop-title class selector */
              display: none !important; 
+        }
+        
+        /* MODIFIED: Ensure the mobile title is visible */
+        .playwrap .mobile-title {
+            display: block !important;
         }
 
         /* Use a dedicated, smaller area for the start/reset buttons on mobile */
@@ -136,16 +141,24 @@
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* Ensure the Reset All button uses 100% width on mobile */
-        .hud-footer .btn {
+        /* MODIFIED: Ensure the Reset All button uses 100% width on mobile */
+        /* The reset-all button is now moved into the #mobile-buttons container, 
+           so this style applies to the new button inside that container. */
+        #mobile-buttons .btn.danger {
             width: 100%;
+            margin-top: 8px; /* Add slight separation */
+        }
+        /* MODIFIED: Hide the desktop-only reset-all container on mobile */
+        .hud-footer {
+            display: none; 
         }
     }
-    /* Hide mobile-specific div on desktop */
-    #mobile-buttons {
+    
+    /* MODIFIED: Hide mobile-specific div on desktop */
+    #mobile-buttons, .playwrap .mobile-title {
         display: none;
     }
-
+    
     .playwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
     .title{
         font-size:28px;
@@ -252,9 +265,10 @@
   <div class="wrap">
     <div class="card">
       <div class="playwrap">
+        <div class="title mobile-title">Byte Serpent</div>
+        
         <canvas id="game" width="480" height="480"></canvas>
         
-        <!-- Touch Controls remain here, placed right below the canvas -->
         <div class="controls">
             <button id="up-btn" class="control-btn" data-dir="up">▲</button>
             <div id="center-spacer" style="grid-area: center; visibility: hidden;"></div>
@@ -264,28 +278,26 @@
         </div>
         
       </div>
-      <!-- NEW MOBILE BUTTONS CONTAINER (Visible only on mobile via CSS/JS) -->
       <div id="mobile-buttons">
           <button id="start-mobile" class="btn primary">Start</button>
           <button id="reset-mobile" class="btn">Reset</button>
+          <button id="reset-all-mobile" class="btn danger">Reset All</button> 
       </div>
       
       <div class="hud">
-        <div class="title">Byte Serpent</div>
+        <div class="title desktop-title">Byte Serpent</div>
         <div class="row"><div class="big">Score</div><div id="score">0</div></div>
         <div class="row"><div class="big">Best</div><div id="best">0</div></div>
         <div class="row"><div class="hint">Speed</div><div id="speed">6</div></div>
-        <!-- Desktop start/reset buttons (Hidden on mobile via JS) -->
         <div id="desktop-buttons" style="display:flex;gap:8px">
           <button id="start" class="btn primary">Start</button>
           <button id="reset" class="btn">Reset</button>
         </div>
-        <!-- These hints are hidden on mobile to save vertical space -->
         <div class="hint">Controls: <span class="green-control">Arrow keys</span> / <span class="green-control">WASD</span></div>
         <div class="hint">Try to eat the <span class="red-warning">RED FOOD</span>. Don't hit the <span class="red-warning">WALLS</span> or <span class="red-warning">YOURSELF</span>.</div>
         
         <div class="hud-footer">
-            <button id="reset-all" class="btn danger">Reset All</button>
+            <button id="reset-all-desktop" class="btn danger">Reset All</button>
         </div>
         </div>
     </div>
@@ -308,15 +320,24 @@ const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const bestEl = document.getElementById('best');
 const speedEl = document.getElementById('speed');
+
 // Desktop Buttons
 const startBtn = document.getElementById('start');
 const resetBtn = document.getElementById('reset');
+
 // Mobile Buttons (New IDs)
 const startMobileBtn = document.getElementById('start-mobile');
 const resetMobileBtn = document.getElementById('reset-mobile');
 
-const titleEl = document.querySelector('.title'); 
-const resetAllBtn = document.getElementById('reset-all');
+// MODIFIED: Renamed old resetAll to desktop, created new mobile resetAll
+const resetAllDesktopBtn = document.getElementById('reset-all-desktop');
+const resetAllMobileBtn = document.getElementById('reset-all-mobile');
+
+
+// MODIFIED: Now we reference both titles, the active one will be styled
+const desktopTitleEl = document.querySelector('.desktop-title'); 
+const mobileTitleEl = document.querySelector('.mobile-title'); 
+
 
 // Custom Modal elements
 const confirmModal = document.getElementById('confirm-modal');
@@ -439,8 +460,10 @@ function resetGame(){
   updateHud();
   
   // Reset styles on game reset
-  titleEl.style.color = '';
-  titleEl.style.textShadow = '';
+  desktopTitleEl.style.color = '';
+  desktopTitleEl.style.textShadow = '';
+  mobileTitleEl.style.color = ''; // MODIFIED: Reset mobile title style
+  mobileTitleEl.style.textShadow = ''; // MODIFIED: Reset mobile title style
   canvas.style.boxShadow = '';
   
   // Set ALL elements to "alive" green color (var(--accent) is #22c55e)
@@ -541,8 +564,11 @@ function gameOver(){
   // Apply colors and glows
   canvas.style.boxShadow = canvasGlow;
   
-  titleEl.style.color = primaryColor;
-  titleEl.style.textShadow = shadowGlow;
+  // MODIFIED: Apply styling to BOTH titles
+  desktopTitleEl.style.color = primaryColor;
+  desktopTitleEl.style.textShadow = shadowGlow;
+  mobileTitleEl.style.color = primaryColor;
+  mobileTitleEl.style.textShadow = shadowGlow;
   
   // Score is always colored by the primary color (Red or Gold)
   scoreLabelEl.style.color = primaryColor;
@@ -693,13 +719,16 @@ window.addEventListener('keydown', e => {
 // DESKTOP button listeners
 startBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', resetGame);
+resetAllDesktopBtn.addEventListener('click', showResetAllConfirmation); // MODIFIED: Desktop listener
 
 // MOBILE button listeners
 startMobileBtn.addEventListener('click', startGame);
 resetMobileBtn.addEventListener('click', resetGame);
+resetAllMobileBtn.addEventListener('click', showResetAllConfirmation); // MODIFIED: Mobile listener
 
 // --- Event Listeners for Custom Modal ---
-resetAllBtn.addEventListener('click', showResetAllConfirmation);
+// MODIFIED: Removed the single `resetAllBtn` listener as it's now handled by the specific desktop/mobile buttons above.
+
 confirmYesBtn.addEventListener('click', executeResetAll);
 confirmNoBtn.addEventListener('click', () => {
     confirmModal.style.display = 'none';
@@ -707,7 +736,8 @@ confirmNoBtn.addEventListener('click', () => {
 
 // --- Dynamic Element Reordering for Mobile View ---
 (function dynamicLayoutAdjustment() {
-    const isMobile = window.innerWidth <= 720;
+    // MODIFIED: Use the client width for more accurate mobile detection in JS
+    const isMobile = window.innerWidth <= 720; 
     const desktopButtonsContainer = document.getElementById('desktop-buttons');
     const mobileButtonsContainer = document.getElementById('mobile-buttons');
 
@@ -728,6 +758,13 @@ confirmNoBtn.addEventListener('click', () => {
         if (desktopButtonsContainer) {
              desktopButtonsContainer.style.display = 'none';
         }
+        
+        // MODIFIED: Hide the desktop footer containing the old Reset All button
+        const hudFooter = document.querySelector('.hud-footer');
+        if (hudFooter) {
+            hudFooter.style.display = 'none';
+        }
+
     } else {
         // Hide mobile-only button container on desktop
         if (mobileButtonsContainer) {
