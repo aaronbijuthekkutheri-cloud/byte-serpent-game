@@ -58,6 +58,6 @@ CSS3: Custom styles, Flexbox/Grid for layout, and media queries for responsivene
 
 Local Storage: Used for basic persistent data storage (high score).
 
-✨ Acknowledgements
+✨Acknowledgements
 
-The final code was significantly improved and stabilized with the assistance of the Gemini AI model. Specifically, Gemini helped refine the CSS to ensure the canvas scales fluidly on mobile viewports (width: 90vw; height: 90vw;), successfully preventing screen overflow and horizontal scrolling across all devices.
+The final code was significantly improved and stabilized with the assistance of the Gemini AI model.
