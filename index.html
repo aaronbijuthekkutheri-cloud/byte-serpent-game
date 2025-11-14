@@ -12,7 +12,6 @@
     .wrap{
         min-height:100vh;
         display:flex;
-        /* Default: Center content vertically on desktop */
         align-items:center;
         justify-content:center;
         padding:12px; 
@@ -67,41 +66,32 @@
     /* MOBILE STYLES START */
     @media(max-width:720px){
         .wrap{
-            /* ELIMINATE SPACE: Remove all outer padding */
-            padding: 0; 
-            /* ELIMINATE SPACE: Align content to the top instead of centering */
-            align-items: flex-start;
+            /* Reduced padding to maximize vertical space */
+            padding: 8px; 
         }
         .card{
             flex-direction:column;
-            /* ELIMINATE SPACE: Reduce card padding (just enough for visual margin) */
-            padding: 8px; 
-            gap: 12px;
+            padding: 18px; 
+            gap: 18px;
             align-items: center; 
-            /* Ensure card takes full width for responsive layout */
-            width: 100%;
-            /* ELIMINATE SPACE: Remove box shadow so it doesn't create extra scroll space */
-            box-shadow: none; 
-            background: transparent; /* Card background is unnecessary when using full width */
         }
         .hud{
             width: 100%; 
             max-width: 480px; 
-            /* 🔥 FINAL FIX: Ensure HUD itself has NO margin at all. */
-            margin: 0 auto; 
-            /* Tighter gap between score rows */
+            /* Reset margin for mobile stacked layout */
+            margin-top: 0; 
+            /* OPTIMIZATION 1: Reduce vertical spacing in the HUD on mobile */
             gap: 5px; 
-            /* FINAL FIX: Set padding to 0, 0, 10px, 0. This is the main score container. */
-            padding: 0 0 10px 0; 
+            padding: 10px 0; 
         }
         .hud .row{
+            /* OPTIMIZATION 2: Make the score/best row text smaller */
             font-size: 16px; 
         }
         .hud .row .big {
             font-size: 16px; 
         }
-        /* Constrain the width of the score rows and the button container */
-        .hud .row, .hud-footer, #mobile-reset-all-container {
+        .hud .row, .hud-footer {
             max-width: 300px; 
             width: 100%;
             margin-left: auto;
@@ -109,6 +99,7 @@
         }
         .hud-footer {
             align-items: center;
+             /* Aggressively reduce margin and padding for Reset All visibility */
             margin-top: 5px; 
             padding-top: 5px;
         }
@@ -120,66 +111,41 @@
             max-height: 480px;
         }
         .playwrap {
-            margin-top: 0; 
-            /* Remove bottom padding from playwrap to pull the score section up */
-            padding-bottom: 0; 
+            /* Reset playwrap margin/padding to save height. */
+            margin: 0; 
+            padding-bottom: 10px; 
             width: 100%;
         }
         .controls {
-            /* Keep margin top for separation from canvas, but remove margin bottom */
             margin: 15px auto 0;
         }
         
-        /* Hide the Desktop Title and Hints in the HUD on mobile */
-        .hud > .desktop-title, .hud > .hint { 
+        /* FIX: Hide the Title and Hints in the HUD on mobile */
+        .hud > .title, .hud > .hint { 
              display: none !important; 
         }
-        
-        /* Show the mobile title above the canvas */
-        .playwrap .mobile-title {
-            display: block !important;
-            margin-bottom: 8px; /* Slightly reduced margin */
-        }
 
-        /* Mobile Buttons Row (Start/Reset) - Only visible when game is not running */
-        #mobile-buttons-row {
+        /* Use a dedicated, smaller area for the start/reset buttons on mobile */
+        #mobile-buttons {
             display: flex;
             gap: 8px;
             max-width: 300px;
             width: 100%;
-            /* Removed all margin/padding around this row, relying on margin from controls only */
-            margin: 0 auto 0 auto; 
+            margin: 0 auto 10px auto; 
             padding: 10px 0 0 0;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* 🔥 THE SOLUTION: Mobile Button for Reset All is placed immediately after the speed row */
-        #mobile-reset-all-container {
-            display: flex;
-            /* Small margin-top to separate it slightly from the Speed row */
-            margin: 5px auto 0 auto; 
-            /* Removed the border and padding-top that caused space */
-            padding-top: 0; 
-            border-top: none; 
-        }
-        
-        /* Make all buttons in the row equal width */
-        #mobile-buttons-row .btn, #mobile-reset-all-container .btn {
-            flex-grow: 1;
+        /* Ensure the Reset All button uses 100% width on mobile */
+        .hud-footer .btn {
             width: 100%;
         }
-
-        /* Hide the desktop-only reset-all container on mobile */
-        .hud-footer {
-            display: none; 
-        }
     }
-    
-    /* Hide mobile-specific containers on desktop */
-    #mobile-buttons-row, #mobile-reset-all-container, .playwrap .mobile-title {
+    /* Hide mobile-specific div on desktop */
+    #mobile-buttons {
         display: none;
     }
-    
+
     .playwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
     .title{
         font-size:28px;
@@ -286,10 +252,9 @@
   <div class="wrap">
     <div class="card">
       <div class="playwrap">
-        <div class="title mobile-title">Byte Serpent</div>
-        
         <canvas id="game" width="480" height="480"></canvas>
         
+        <!-- Touch Controls remain here, placed right below the canvas -->
         <div class="controls">
             <button id="up-btn" class="control-btn" data-dir="up">▲</button>
             <div id="center-spacer" style="grid-area: center; visibility: hidden;"></div>
@@ -299,30 +264,28 @@
         </div>
         
       </div>
-      <div id="mobile-buttons-row">
+      <!-- NEW MOBILE BUTTONS CONTAINER (Visible only on mobile via CSS/JS) -->
+      <div id="mobile-buttons">
           <button id="start-mobile" class="btn primary">Start</button>
           <button id="reset-mobile" class="btn">Reset</button>
       </div>
       
       <div class="hud">
-        <div class="title desktop-title">Byte Serpent</div>
+        <div class="title">Byte Serpent</div>
         <div class="row"><div class="big">Score</div><div id="score">0</div></div>
         <div class="row"><div class="big">Best</div><div id="best">0</div></div>
         <div class="row"><div class="hint">Speed</div><div id="speed">6</div></div>
-        
-        <div id="mobile-reset-all-container">
-            <button id="reset-all-mobile" class="btn danger">Reset All</button>
-        </div>
-
+        <!-- Desktop start/reset buttons (Hidden on mobile via JS) -->
         <div id="desktop-buttons" style="display:flex;gap:8px">
           <button id="start" class="btn primary">Start</button>
           <button id="reset" class="btn">Reset</button>
         </div>
+        <!-- These hints are hidden on mobile to save vertical space -->
         <div class="hint">Controls: <span class="green-control">Arrow keys</span> / <span class="green-control">WASD</span></div>
         <div class="hint">Try to eat the <span class="red-warning">RED FOOD</span>. Don't hit the <span class="red-warning">WALLS</span> or <span class="red-warning">YOURSELF</span>.</div>
         
         <div class="hud-footer">
-            <button id="reset-all-desktop" class="btn danger">Reset All</button>
+            <button id="reset-all" class="btn danger">Reset All</button>
         </div>
         </div>
     </div>
@@ -345,24 +308,15 @@ const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const bestEl = document.getElementById('best');
 const speedEl = document.getElementById('speed');
-
 // Desktop Buttons
 const startBtn = document.getElementById('start');
 const resetBtn = document.getElementById('reset');
-
 // Mobile Buttons (New IDs)
 const startMobileBtn = document.getElementById('start-mobile');
 const resetMobileBtn = document.getElementById('reset-mobile');
 
-// Reset All Buttons
-const resetAllDesktopBtn = document.getElementById('reset-all-desktop');
-const resetAllMobileBtn = document.getElementById('reset-all-mobile');
-
-
-// Title Elements
-const desktopTitleEl = document.querySelector('.desktop-title'); 
-const mobileTitleEl = document.querySelector('.mobile-title'); 
-
+const titleEl = document.querySelector('.title'); 
+const resetAllBtn = document.getElementById('reset-all');
 
 // Custom Modal elements
 const confirmModal = document.getElementById('confirm-modal');
@@ -485,10 +439,8 @@ function resetGame(){
   updateHud();
   
   // Reset styles on game reset
-  desktopTitleEl.style.color = '';
-  desktopTitleEl.style.textShadow = '';
-  mobileTitleEl.style.color = ''; 
-  mobileTitleEl.style.textShadow = ''; 
+  titleEl.style.color = '';
+  titleEl.style.textShadow = '';
   canvas.style.boxShadow = '';
   
   // Set ALL elements to "alive" green color (var(--accent) is #22c55e)
@@ -589,11 +541,8 @@ function gameOver(){
   // Apply colors and glows
   canvas.style.boxShadow = canvasGlow;
   
-  // Apply styling to BOTH titles
-  desktopTitleEl.style.color = primaryColor;
-  desktopTitleEl.style.textShadow = shadowGlow;
-  mobileTitleEl.style.color = primaryColor;
-  mobileTitleEl.style.textShadow = shadowGlow;
+  titleEl.style.color = primaryColor;
+  titleEl.style.textShadow = shadowGlow;
   
   // Score is always colored by the primary color (Red or Gold)
   scoreLabelEl.style.color = primaryColor;
@@ -744,14 +693,13 @@ window.addEventListener('keydown', e => {
 // DESKTOP button listeners
 startBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', resetGame);
-resetAllDesktopBtn.addEventListener('click', showResetAllConfirmation); 
 
 // MOBILE button listeners
 startMobileBtn.addEventListener('click', startGame);
 resetMobileBtn.addEventListener('click', resetGame);
-resetAllMobileBtn.addEventListener('click', showResetAllConfirmation); 
 
 // --- Event Listeners for Custom Modal ---
+resetAllBtn.addEventListener('click', showResetAllConfirmation);
 confirmYesBtn.addEventListener('click', executeResetAll);
 confirmNoBtn.addEventListener('click', () => {
     confirmModal.style.display = 'none';
@@ -759,46 +707,31 @@ confirmNoBtn.addEventListener('click', () => {
 
 // --- Dynamic Element Reordering for Mobile View ---
 (function dynamicLayoutAdjustment() {
-    const isMobile = window.innerWidth <= 720; 
+    const isMobile = window.innerWidth <= 720;
     const desktopButtonsContainer = document.getElementById('desktop-buttons');
-    const mobileButtonsRow = document.getElementById('mobile-buttons-row');
-    const mobileResetAllContainer = document.getElementById('mobile-reset-all-container');
-    const hud = document.querySelector('.hud'); // The score/best/speed section
-
+    const mobileButtonsContainer = document.getElementById('mobile-buttons');
 
     if (isMobile) {
         const card = document.querySelector('.card');
         const playwrap = document.querySelector('.playwrap');
+        const hud = document.querySelector('.hud');
         
-        // Final order on mobile:
-        // 1. Playwrap (Title, Canvas, Controls)
-        // 2. Mobile Buttons Row (Start/Reset) - Hidden when game starts
-        // 3. HUD (Score/Best/Speed + Reset All)
-
-        if (card && playwrap && hud && mobileButtonsRow) {
+        // Desired order on mobile: Playwrap (Canvas/Controls) -> Mobile Buttons -> HUD (Score/ResetAll)
+        if (card && playwrap && hud && mobileButtonsContainer) {
             // Re-order the children of the card container
             card.appendChild(playwrap); 
-            card.appendChild(mobileButtonsRow); 
+            card.appendChild(mobileButtonsContainer);
             card.appendChild(hud); 
         }
         
-        // Hide desktop-only elements
+        // Hide desktop-only buttons
         if (desktopButtonsContainer) {
              desktopButtonsContainer.style.display = 'none';
         }
-        
-        const hudFooter = document.querySelector('.hud-footer');
-        if (hudFooter) {
-            hudFooter.style.display = 'none';
-        }
-
     } else {
-        // Hide mobile-only containers on desktop
-        if (mobileButtonsRow) {
-            mobileButtonsRow.style.display = 'none';
-        }
-        if (mobileResetAllContainer) {
-            mobileResetAllContainer.style.display = 'none';
+        // Hide mobile-only button container on desktop
+        if (mobileButtonsContainer) {
+            mobileButtonsContainer.style.display = 'none';
         }
     }
 })();
