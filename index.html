@@ -7,14 +7,14 @@
   <style>
     :root{--bg:#0f1724;--card:#0b1220;--accent:#22c55e;--muted:#94a3b8}
     *{box-sizing:border-box}
-    /* FIX 1: Set body overflow to hidden and adjusted wrap padding */
+    /* Set body overflow to hidden and adjusted wrap padding */
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#071021);color:#e6eef8; overflow: hidden;}
     .wrap{
         min-height:100vh;
         display:flex;
         align-items:center;
         justify-content:center;
-        padding:12px; /* Reduced padding to save vertical space */
+        padding:12px; 
     }
     .card{
         background:rgba(255,255,255,0.03);
@@ -22,8 +22,7 @@
         border-radius:12px;
         box-shadow:0 6px 24px rgba(2,6,23,0.6);
         display:flex;
-        gap: 30px; /* Increased separation */
-        /* FIX 1: Align items to the top to allow manual HUD positioning */
+        gap: 30px; 
         align-items: flex-start; 
         justify-content: center; 
     }
@@ -38,7 +37,7 @@
         flex-direction:column;
         gap:10px;
         min-width:180px;
-        /* FIX 2: Manually push the HUD down to visually align its center with the 480px canvas center */
+        /* Manually push the HUD down to visually align its center with the 480px canvas center */
         margin-top: 65px; 
     }
     .hud .row{display:flex;justify-content:space-between;align-items:center}
@@ -64,22 +63,32 @@
         font-weight: 600;
     }
     
-    /* Mobile styles to revert to stacked layout */
+    /* MOBILE STYLES START */
     @media(max-width:720px){
         .card{
             flex-direction:column;
             padding: 18px; 
             gap: 18px;
-            align-items: center; /* Center items horizontally when stacked */
+            align-items: center; 
         }
         .hud{
             width: 100%; 
             max-width: 480px; 
             /* Reset margin for mobile stacked layout */
             margin-top: 0; 
+            /* OPTIMIZATION 1: Reduce vertical spacing in the HUD on mobile */
+            gap: 5px; 
+            padding: 10px 0; 
+        }
+        .hud .row{
+            /* OPTIMIZATION 2: Make the score/best row text smaller */
+            font-size: 16px; 
+        }
+        .hud .row .big {
+            font-size: 16px; 
         }
         .hud .row, .hud-footer {
-            max-width: 300px; /* Constrain width of internal HUD elements on mobile */
+            max-width: 300px; 
             width: 100%;
             margin-left: auto;
             margin-right: auto;
@@ -87,19 +96,46 @@
         .hud-footer {
             align-items: center;
         }
-        /* ✨ NEW FIX: Make canvas fluid on small screens */
+        /* Make canvas fluid on small screens */
         canvas {
-            width: 90vw; /* Take 90% of the viewport width */
-            height: 90vw; /* Keep it square */
-            max-width: 480px; /* Don't exceed original size */
+            width: 90vw; 
+            height: 90vw; 
+            max-width: 480px; 
             max-height: 480px;
         }
-        /* /✨ NEW FIX */
+        .playwrap {
+            /* Reset playwrap margin/padding to save height. */
+            margin: 0; 
+            padding-bottom: 10px; 
+            width: 100%;
+        }
+        .controls {
+            margin: 15px auto 0;
+        }
+        
+        /* FIX 4: Hide the large desktop title and info in the HUD */
+        .hud .title, .hud .hint { 
+             display: none; 
+        }
+
+        /* FIX 5: Use a dedicated, smaller area for the start/reset buttons on mobile */
+        #mobile-buttons {
+            display: flex;
+            gap: 8px;
+            max-width: 300px;
+            width: 100%;
+            margin: 0 auto 10px auto; 
+            padding: 10px 0 0 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    }
+    /* Hide mobile-specific div on desktop */
+    #mobile-buttons {
+        display: none;
     }
 
     .playwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
     .title{
-        /* ADJUSTED FONT SIZE */
         font-size:28px;
         font-weight:700;
         color: #e6eef8; 
@@ -198,15 +234,6 @@
     #left-btn { --area: left; }
     #right-btn { --area: right; }
     
-    /* Ensure playwrap includes controls on mobile */
-    @media(max-width:720px){
-        .playwrap {
-            width: 100%;
-        }
-        .controls {
-            margin: 15px auto 0;
-        }
-    }
   </style>
 </head>
 <body>
@@ -224,12 +251,17 @@
         </div>
         
       </div>
+      <div id="mobile-buttons">
+          <button id="start-mobile" class="btn primary">Start</button>
+          <button id="reset-mobile" class="btn">Reset</button>
+      </div>
+      
       <div class="hud">
         <div class="title">Byte Serpent</div>
         <div class="row"><div class="big">Score</div><div id="score">0</div></div>
         <div class="row"><div class="big">Best</div><div id="best">0</div></div>
         <div class="row"><div class="hint">Speed</div><div id="speed">6</div></div>
-        <div style="display:flex;gap:8px">
+        <div id="desktop-buttons" style="display:flex;gap:8px">
           <button id="start" class="btn primary">Start</button>
           <button id="reset" class="btn">Reset</button>
         </div>
@@ -260,8 +292,13 @@ const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const bestEl = document.getElementById('best');
 const speedEl = document.getElementById('speed');
+// Desktop Buttons
 const startBtn = document.getElementById('start');
 const resetBtn = document.getElementById('reset');
+// Mobile Buttons (New IDs)
+const startMobileBtn = document.getElementById('start-mobile');
+const resetMobileBtn = document.getElementById('reset-mobile');
+
 const titleEl = document.querySelector('.title'); 
 const resetAllBtn = document.getElementById('reset-all');
 
@@ -637,8 +674,13 @@ window.addEventListener('keydown', e => {
   }
 });
 
+// DESKTOP button listeners
 startBtn.addEventListener('click', startGame);
 resetBtn.addEventListener('click', resetGame);
+
+// MOBILE button listeners
+startMobileBtn.addEventListener('click', startGame);
+resetMobileBtn.addEventListener('click', resetGame);
 
 // --- Event Listeners for Custom Modal ---
 resetAllBtn.addEventListener('click', showResetAllConfirmation);
@@ -646,6 +688,38 @@ confirmYesBtn.addEventListener('click', executeResetAll);
 confirmNoBtn.addEventListener('click', () => {
     confirmModal.style.display = 'none';
 });
+
+// --- Dynamic Element Reordering for Mobile View ---
+(function dynamicLayoutAdjustment() {
+    const isMobile = window.innerWidth <= 720;
+    const desktopButtonsContainer = document.getElementById('desktop-buttons');
+    const mobileButtonsContainer = document.getElementById('mobile-buttons');
+
+    if (isMobile) {
+        const card = document.querySelector('.card');
+        const playwrap = document.querySelector('.playwrap');
+        const hud = document.querySelector('.hud');
+        
+        // Desired order on mobile: Playwrap (Canvas/Controls) -> Mobile Buttons -> HUD (Score)
+        if (card && playwrap && hud && mobileButtonsContainer) {
+            // Re-order the children of the card container
+            card.appendChild(playwrap); 
+            card.appendChild(mobileButtonsContainer);
+            card.appendChild(hud); 
+        }
+        
+        // Hide desktop-only buttons
+        if (desktopButtonsContainer) {
+             desktopButtonsContainer.style.display = 'none';
+        }
+    } else {
+        // Hide mobile-only button container on desktop
+        if (mobileButtonsContainer) {
+            mobileButtonsContainer.style.display = 'none';
+        }
+    }
+})();
+
 
 resetGame();
 </script>
