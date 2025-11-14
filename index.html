@@ -8,83 +8,60 @@
     :root{--bg:#0f1724;--card:#0b1220;--accent:#22c55e;--muted:#94a3b8}
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#071021);color:#e6eef8}
-
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-
-    .card{
-      background:rgba(255,255,255,0.03);
-      padding:18px;
-      border-radius:12px;
-      box-shadow:0 6px 24px rgba(2,6,23,0.6);
-      display:flex;
-      gap:18px;
-      align-items:center;
-    }
-
-    canvas{
-      background:linear-gradient(180deg,#071422,#08202b);
-      border-radius:8px;
-      display:block;
-    }
-
-    .hud{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-width:180px;
-    }
+    .card{background:rgba(255,255,255,0.03);padding:18px;border-radius:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6);display:flex;gap:18px;align-items:center}
+    canvas{background:linear-gradient(180deg,#071422,#08202b);border-radius:8px;display:block}
+    .hud{display:flex;flex-direction:column;gap:10px;min-width:180px}
 
     .hud .row{display:flex;justify-content:space-between;align-items:center}
     .btn{background:transparent;border:1px solid rgba(255,255,255,0.07);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
     .btn.primary{border-color:var(--accent);color:var(--accent)}
+
+    /* NEW BUTTON STYLE for Reset All */
+    .btn.danger{
+      border-color:#ff5555;
+      color:#ff7777;
+    }
+
     .hint{font-size:13px;color:var(--muted)}
     .big{font-size:20px;font-weight:600}
+    @media(max-width:720px){.card{flex-direction:column}}
 
-    .title{
+    /* Title above the HUD */
+    .sideTitle{
+      text-align:center;
       font-size:28px;
       font-weight:700;
-      text-align:center;
+      margin-bottom:6px;
       color:white;
-      margin-bottom:12px;
     }
 
-    /* 🔧 FIXED MOBILE LAYOUT SO RESET BUTTON IS ALWAYS VISIBLE */
-    @media(max-width:720px){
-      .card{
-        flex-direction:column;
-        align-items:center;
-        gap:16px;
-        padding:16px;
-      }
-      .hud{
-        width:100%;
-        align-items:center;
-        text-align:center;
-      }
-      .hud .row{
-        width:100%;
-        max-width:260px;
-        justify-content:space-between;
-      }
-    }
+    /* Title above canvas */
+    .playwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+    .title{font-size:26px;font-weight:700;color:#0b6b44;text-shadow:0 0 6px rgba(11,107,68,0.28);margin-bottom:4px}
+    
   </style>
 </head>
-
 <body>
   <div class="wrap">
     <div class="card">
 
-      <div style="display:flex;flex-direction:column;align-items:center">
+      <div class="playwrap">
         <div class="title">Byte Serpent</div>
         <canvas id="game" width="480" height="480"></canvas>
       </div>
 
       <div class="hud">
+        <div class="sideTitle">BYTE SERPENT</div>
+
         <div class="row"><div class="big">Score</div><div id="score">0</div></div>
         <div class="row"><div class="big">Best</div><div id="best">0</div></div>
         <div class="row"><div class="hint">Speed</div><div id="speed">6</div></div>
 
-        <div style="display:flex;gap:8px">
+        <!-- RESET ALL BUTTON RIGHT BELOW SPEED (minimum gap) -->
+        <button id="resetAll" class="btn danger">Reset All</button>
+
+        <div style="display:flex;gap:8px;margin-top:4px;">
           <button id="start" class="btn primary">Start</button>
           <button id="reset" class="btn">Reset</button>
         </div>
@@ -92,7 +69,6 @@
         <div class="hint">Controls: Arrow keys / WASD</div>
         <div class="hint">Try to eat the red food. Don't hit the walls or yourself.</div>
       </div>
-
     </div>
   </div>
 
@@ -105,6 +81,7 @@ const bestEl = document.getElementById('best');
 const speedEl = document.getElementById('speed');
 const startBtn = document.getElementById('start');
 const resetBtn = document.getElementById('reset');
+const resetAllBtn = document.getElementById('resetAll');
 
 const gridSize = 20;
 const cols = canvas.width / gridSize;
@@ -125,6 +102,15 @@ let score = 0;
 let best = Number(localStorage.getItem('snake_best') || 0);
 bestEl.textContent = best;
 
+// RESET ALL DATA
+resetAllBtn.addEventListener('click', () => {
+  localStorage.clear();
+  best = 0;
+  bestEl.textContent = 0;
+  resetGame();
+});
+
+// RESET GAME
 function resetGame(){
   snake = [{ x: Math.floor(cols/2), y: Math.floor(rows/2) }];
   dir = {x:1, y:0};
@@ -188,7 +174,9 @@ function step(){
       tickInterval = Math.max(40, tickInterval * 0.9);
       restartTicker();
     }
-  } else snake.pop();
+  } else {
+    snake.pop();
+  }
 
   updateHud();
   draw();
@@ -267,6 +255,7 @@ function roundRect(ctx,x,y,w,h,r){
 
 window.addEventListener('keydown', e => {
   const k = e.key;
+
   let moved = false;
 
   if(k==='ArrowUp'||k==='w'||k==='W'){ nextDir={x:0,y:-1}; moved = true; }
@@ -275,13 +264,20 @@ window.addEventListener('keydown', e => {
   if(k==='ArrowRight'||k==='d'||k==='D'){ nextDir={x:1,y:0}; moved = true; }
 
   if(moved){
-    if(dead){ resetGame(); startGame(); }
-    else if(!running){ startGame(); }
+    if(dead){
+      resetGame();
+      startGame();
+    } else if(!running){
+      startGame();
+    }
   }
 
   if(k===' '){
-    if(dead){ resetGame(); }
-    else if(!running){ startGame(); }
+    if(dead){
+      resetGame();
+    } else if(!running){
+      startGame();
+    }
   }
 });
 
@@ -290,6 +286,5 @@ resetBtn.addEventListener('click', resetGame);
 
 resetGame();
 </script>
-
 </body>
 </html>
