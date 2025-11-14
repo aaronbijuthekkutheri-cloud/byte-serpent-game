@@ -12,6 +12,7 @@
     .wrap{
         min-height:100vh;
         display:flex;
+        /* Default: Center content vertically on desktop */
         align-items:center;
         justify-content:center;
         padding:12px; 
@@ -66,26 +67,31 @@
     /* MOBILE STYLES START */
     @media(max-width:720px){
         .wrap{
-            /* Reduced padding to maximize vertical space */
-            padding: 8px; 
+            /* ELIMINATE SPACE: Remove all outer padding */
+            padding: 0; 
+            /* ELIMINATE SPACE: Align content to the top instead of centering */
+            align-items: flex-start;
         }
         .card{
             flex-direction:column;
-            padding: 18px; 
-            gap: 18px;
+            /* ELIMINATE SPACE: Reduce card padding (just enough for visual margin) */
+            padding: 8px; 
+            gap: 12px;
             align-items: center; 
+            /* Ensure card takes full width for responsive layout */
+            width: 100%;
+            /* ELIMINATE SPACE: Remove box shadow so it doesn't create extra scroll space */
+            box-shadow: none; 
+            background: transparent; /* Card background is unnecessary when using full width */
         }
         .hud{
             width: 100%; 
             max-width: 480px; 
-            /* Reset margin for mobile stacked layout */
             margin-top: 0; 
-            /* OPTIMIZATION 1: Reduce vertical spacing in the HUD on mobile */
             gap: 5px; 
             padding: 10px 0; 
         }
         .hud .row{
-            /* OPTIMIZATION 2: Make the score/best row text smaller */
             font-size: 16px; 
         }
         .hud .row .big {
@@ -99,7 +105,6 @@
         }
         .hud-footer {
             align-items: center;
-             /* Aggressively reduce margin and padding for Reset All visibility */
             margin-top: 5px; 
             padding-top: 5px;
         }
@@ -111,8 +116,7 @@
             max-height: 480px;
         }
         .playwrap {
-            /* Reset playwrap margin/padding to save height. */
-            margin: 0; 
+            margin-top: 0; 
             padding-bottom: 10px; 
             width: 100%;
         }
@@ -128,7 +132,7 @@
         /* Show the mobile title above the canvas */
         .playwrap .mobile-title {
             display: block !important;
-            margin-bottom: 10px; /* Add space between title and canvas */
+            margin-bottom: 8px; /* Slightly reduced margin */
         }
 
         /* Mobile Buttons Row (Start/Reset) */
@@ -139,12 +143,11 @@
             width: 100%;
             margin: 0 auto 10px auto; 
             padding: 10px 0 0 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.05); /* Added separation line */
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         /* Mobile Button for Reset All (separate container) */
         #mobile-reset-all-container {
-            /* MODIFIED: This container must be displayed to hold the button */
             display: flex;
             max-width: 300px;
             width: 100%;
@@ -157,7 +160,7 @@
             width: 100%;
         }
 
-        /* MODIFIED: Hide the desktop-only reset-all container on mobile */
+        /* Hide the desktop-only reset-all container on mobile */
         .hud-footer {
             display: none; 
         }
@@ -757,11 +760,11 @@ confirmNoBtn.addEventListener('click', () => {
         const card = document.querySelector('.card');
         const playwrap = document.querySelector('.playwrap');
         
-        // Desired FINAL order on mobile to ensure visibility:
+        // Final order on mobile:
         // 1. Playwrap (Title, Canvas, Controls)
         // 2. Mobile Buttons Row (Start/Reset)
         // 3. HUD (Score/Best/Speed)
-        // 4. Mobile Reset All Container (Reset All) <-- MOVED TO LAST
+        // 4. Mobile Reset All Container (Reset All)
 
         if (card && playwrap && hud && mobileButtonsRow && mobileResetAllContainer) {
             // Re-order the children of the card container
