@@ -120,18 +120,18 @@
             margin: 15px auto 0;
         }
         
-        /* MODIFIED: Hide the Desktop Title and Hints in the HUD on mobile */
+        /* Hide the Desktop Title and Hints in the HUD on mobile */
         .hud > .desktop-title, .hud > .hint { 
              display: none !important; 
         }
         
-        /* MODIFIED: Show the mobile title above the canvas */
+        /* Show the mobile title above the canvas */
         .playwrap .mobile-title {
             display: block !important;
             margin-bottom: 10px; /* Add space between title and canvas */
         }
 
-        /* MODIFIED: Adjust mobile buttons container to hold the start/reset buttons in a row */
+        /* Mobile Buttons Row (Start/Reset) */
         #mobile-buttons-row {
             display: flex;
             gap: 8px;
@@ -139,17 +139,19 @@
             width: 100%;
             margin: 0 auto 10px auto; 
             padding: 10px 0 0 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05); /* Added separation line */
         }
         
-        /* MODIFIED: Reset All button takes up its own row */
+        /* Mobile Button for Reset All (separate container) */
         #mobile-reset-all-container {
+            /* MODIFIED: This container must be displayed to hold the button */
             display: flex;
             max-width: 300px;
             width: 100%;
             margin: 0 auto 10px auto;
         }
         
-        /* MODIFIED: Make all buttons in the row equal width */
+        /* Make all buttons in the row equal width */
         #mobile-buttons-row .btn, #mobile-reset-all-container .btn {
             flex-grow: 1;
             width: 100%;
@@ -161,7 +163,7 @@
         }
     }
     
-    /* MODIFIED: Hide mobile-specific containers on desktop */
+    /* Hide mobile-specific containers on desktop */
     #mobile-buttons-row, #mobile-reset-all-container, .playwrap .mobile-title {
         display: none;
     }
@@ -748,33 +750,32 @@ confirmNoBtn.addEventListener('click', () => {
     const desktopButtonsContainer = document.getElementById('desktop-buttons');
     const mobileButtonsRow = document.getElementById('mobile-buttons-row');
     const mobileResetAllContainer = document.getElementById('mobile-reset-all-container');
+    const hud = document.querySelector('.hud'); // The score/best/speed section
 
 
     if (isMobile) {
         const card = document.querySelector('.card');
         const playwrap = document.querySelector('.playwrap');
-        const hud = document.querySelector('.hud');
         
-        // Desired order on mobile:
+        // Desired FINAL order on mobile to ensure visibility:
         // 1. Playwrap (Title, Canvas, Controls)
         // 2. Mobile Buttons Row (Start/Reset)
-        // 3. Mobile Reset All Container (Reset All)
-        // 4. HUD (Score/Best/Speed)
-        
+        // 3. HUD (Score/Best/Speed)
+        // 4. Mobile Reset All Container (Reset All) <-- MOVED TO LAST
+
         if (card && playwrap && hud && mobileButtonsRow && mobileResetAllContainer) {
             // Re-order the children of the card container
             card.appendChild(playwrap); 
-            card.appendChild(mobileButtonsRow); // Start/Reset buttons
-            card.appendChild(mobileResetAllContainer); // Reset All button
-            card.appendChild(hud); // Score/Best/Speed
+            card.appendChild(mobileButtonsRow); 
+            card.appendChild(hud); // Ensure the score is visible before the reset button
+            card.appendChild(mobileResetAllContainer); // Place Reset All at the very end
         }
         
-        // Hide desktop-only buttons
+        // Hide desktop-only elements
         if (desktopButtonsContainer) {
              desktopButtonsContainer.style.display = 'none';
         }
         
-        // Hide the desktop footer containing the old Reset All button
         const hudFooter = document.querySelector('.hud-footer');
         if (hudFooter) {
             hudFooter.style.display = 'none';
