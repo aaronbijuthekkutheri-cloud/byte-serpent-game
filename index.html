@@ -1,301 +1,212 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Snake — Classic HTML Game</title>
-  <style>
-    :root{--bg:#0f1724;--card:#0b1220;--accent:#22c55e;--muted:#94a3b8}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#071021);color:#e6eef8}
-    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-    .card{background:rgba(255,255,255,0.03);padding:18px;border-radius:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6);display:flex;gap:18px;align-items:center}
-    canvas{background:linear-gradient(180deg,#071422,#08202b);border-radius:8px;display:block}
-
-    /* FIX: HUD width locked so Reset All never disappears */
-    .hud{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-width:200px; 
-      width:200px;      /* THIS FIXES THE MOBILE ISSUE */
+<meta charset="UTF-8">
+<title>Utopian Snake</title>
+<style>
+    body {
+        background:#0a0f0a;
+        font-family:Arial, sans-serif;
+        margin:0;
+        padding:0;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        min-height:100vh;
     }
 
-    .hud .row{display:flex;justify-content:space-between;align-items:center}
-    .btn{background:transparent;border:1px solid rgba(255,255,255,0.07);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
-    .btn.primary{border-color:var(--accent);color:var(--accent)}
-    .btn.danger{border-color:#ff5555;color:#ff7777}
-    .hint{font-size:13px;color:var(--muted)}
-    .big{font-size:20px;font-weight:600}
+    .container {
+        width:100%;
+        max-width:900px;
+        padding:16px;
+    }
 
+    .title {
+        text-align:center;
+        font-size:32px;
+        font-weight:bold;
+        color:#b6ffb0;
+        text-shadow:0 0 12px #00ff88;
+        margin-bottom:20px;
+    }
+
+    .card {
+        background:rgba(0,0,0,0.35);
+        border:1px solid #1d4d1d;
+        border-radius:16px;
+        padding:20px;
+        display:flex;
+        gap:24px;
+        box-shadow:0 0 18px rgba(0,255,140,0.25);
+    }
+
+    canvas {
+        background:#001700;
+        border:2px solid #00aa55;
+        border-radius:10px;
+        display:block;
+    }
+
+    .hud {
+        display:flex;
+        flex-direction:column;
+        gap:20px;
+        color:#b8ffcb;
+        width:260px;
+    }
+
+    .row {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+    }
+
+    button {
+        padding:10px 14px;
+        background:#00b15a;
+        color:#000;
+        border:none;
+        border-radius:8px;
+        font-weight:bold;
+        cursor:pointer;
+        transition:0.2s;
+    }
+    button:hover {
+        background:#00ff88;
+    }
+
+    /* 🌟 REAL FIX FOR PHONES */
     @media(max-width:720px){
-      .card{flex-direction:column}
-    }
+        .card {
+            flex-direction:column;
+            align-items:center;
+            padding:14px;
+            gap:16px;
+        }
 
-    /* Title above Canvas */
-    .playwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-    .title{
-      font-size:26px;
-      font-weight:700;
-      color:#0b6b44;
-      text-shadow:0 0 6px rgba(11,107,68,0.28);
-      margin-bottom:4px
-    }
+        canvas {
+            width:300px !important;
+            height:300px !important;
+        }
 
-    /* Title above HUD */
-    .sideTitle{
-      text-align:center;
-      font-size:28px;
-      font-weight:700;
-      margin-bottom:6px;
-      color:white;
-    }
+        .hud {
+            width:100%;
+            align-items:center;
+            text-align:center;
+        }
 
-  </style>
+        .row {
+            width:100%;
+            justify-content:center;
+            gap:18px;
+        }
+    }
+</style>
 </head>
 <body>
-  <div class="wrap">
+
+<div class="container">
+    <div class="title">Byte Serpent</div>
+
     <div class="card">
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
 
-      <div class="playwrap">
-        <div class="title">Byte Serpent</div>
-        <canvas id="game" width="480" height="480"></canvas>
-      </div>
-
-      <div class="hud">
-        <div class="sideTitle">BYTE SERPENT</div>
-
-        <div class="row"><div class="big">Score</div><div id="score">0</div></div>
-        <div class="row"><div class="big">Best</div><div id="best">0</div></div>
-        <div class="row"><div class="hint">Speed</div><div id="speed">6</div></div>
-
-        <!-- Reset All stays EXACTLY where you originally had it -->
-        <button id="resetAll" class="btn danger">Reset All</button>
-
-        <div style="display:flex;gap:8px;margin-top:4px;">
-          <button id="start" class="btn primary">Start</button>
-          <button id="reset" class="btn">Reset</button>
+        <div class="hud">
+            <div class="row"><span>Score:</span> <span id="score">0</span></div>
+            <div class="row"><span>High Score:</span> <span id="highscore">0</span></div>
+            <div class="row">
+                <button onclick="startGame()">Start</button>
+                <button onclick="resetGame()">Reset</button>
+            </div>
         </div>
-
-        <div class="hint">Controls: Arrow keys / WASD</div>
-        <div class="hint">Try to eat the red food. Don't hit the walls or yourself.</div>
-      </div>
     </div>
-  </div>
+</div>
 
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-const scoreEl = document.getElementById('score');
-const bestEl = document.getElementById('best');
-const speedEl = document.getElementById('speed');
-const startBtn = document.getElementById('start');
-const resetBtn = document.getElementById('reset');
-const resetAllBtn = document.getElementById('resetAll');
+    const grid = 20;
+    let snake, food, dx, dy, score, highScore;
 
-const gridSize = 20;
-const cols = canvas.width / gridSize;
-const rows = canvas.height / gridSize;
-
-let snake;
-let dir;
-let nextDir;
-let food;
-
-let tickInterval;
-let tickTimer = null;
-
-let running = false;
-let dead = false;
-
-let score = 0;
-let best = Number(localStorage.getItem('snake_best') || 0);
-bestEl.textContent = best;
-
-// RESET ALL DATA
-resetAllBtn.addEventListener('click', () => {
-  localStorage.clear();
-  best = 0;
-  bestEl.textContent = 0;
-  resetGame();
-});
-
-// RESET GAME
-function resetGame(){
-  snake = [{ x: Math.floor(cols/2), y: Math.floor(rows/2) }];
-  dir = {x:1, y:0};
-  nextDir = {x:1, y:0};
-
-  placeFood();
-  score = 0;
-  tickInterval = 1000 / 6;
-
-  running = false;
-  dead = false;
-
-  clearInterval(tickTimer);
-  updateHud();
-  draw();
-}
-
-function placeFood(){
-  while(true){
-    const x = Math.floor(Math.random()*cols);
-    const y = Math.floor(Math.random()*rows);
-    if(!snake.some(s => s.x===x && s.y===y)){
-      food = {x,y};
-      return;
+    function init() {
+        snake = [{x:200, y:200}];
+        dx = grid;
+        dy = 0;
+        score = 0;
+        document.getElementById("score").textContent = score;
+        placeFood();
     }
-  }
-}
 
-function startGame(){
-  if(running || dead) return;
-  running = true;
-  restartTicker();
-}
-
-function restartTicker(){
-  clearInterval(tickTimer);
-  tickTimer = setInterval(step, tickInterval);
-}
-
-function step(){
-  if(nextDir.x !== -dir.x || nextDir.y !== -dir.y){
-    dir = nextDir;
-  }
-
-  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-
-  if(head.x<0 || head.x>=cols || head.y<0 || head.y>=rows){
-    gameOver(); return;
-  }
-  if(snake.some(s => s.x===head.x && s.y===head.y)){
-    gameOver(); return;
-  }
-
-  snake.unshift(head);
-
-  if(head.x === food.x && head.y === food.y){
-    score++;
-    placeFood();
-
-    if(score % 3 === 0){
-      tickInterval = Math.max(40, tickInterval * 0.9);
-      restartTicker();
+    function placeFood() {
+        food = {
+            x: Math.floor(Math.random()* (canvas.width/grid)) * grid,
+            y: Math.floor(Math.random()* (canvas.height/grid)) * grid
+        };
     }
-  } else {
-    snake.pop();
-  }
 
-  updateHud();
-  draw();
-}
+    function draw() {
+        ctx.fillStyle="#002000";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
 
-function gameOver(){
-  running = false;
-  dead = true;
-  clearInterval(tickTimer);
+        ctx.fillStyle="#00ff88";
+        snake.forEach(p => ctx.fillRect(p.x, p.y, grid-2, grid-2));
 
-  if(score > best){
-    best = score;
-    localStorage.setItem('snake_best', String(best));
-  }
-  updateHud();
-
-  canvas.style.boxShadow = '0 0 0 6px rgba(255,50,50,0.2)';
-  setTimeout(()=> canvas.style.boxShadow = '', 500);
-
-  draw();
-}
-
-function updateHud(){
-  scoreEl.textContent = score;
-  bestEl.textContent = best;
-  speedEl.textContent = Math.round(1000/tickInterval);
-}
-
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#03151b';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  drawCell(food.x, food.y, '#ff4444');
-
-  for(let i=snake.length-1;i>=0;i--){
-    const s = snake[i];
-    if(i===0) drawCell(s.x,s.y,'#8ef7b6', true);
-    else drawCell(s.x,s.y,'#1de38a');
-  }
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.02)';
-  for(let x=0;x<=cols;x++){
-    ctx.beginPath(); ctx.moveTo(x*gridSize,0); ctx.lineTo(x*gridSize,canvas.height); ctx.stroke();
-  }
-  for(let y=0;y<=rows;y++){
-    ctx.beginPath(); ctx.moveTo(0,y*gridSize); ctx.lineTo(canvas.width,y*gridSize); ctx.stroke();
-  }
-}
-
-function drawCell(cx, cy, color, isHead=false){
-  const px = cx * gridSize;
-  const py = cy * gridSize;
-  const pad = 2;
-
-  if(isHead){
-    const g = ctx.createLinearGradient(px,py,px+gridSize,py+gridSize);
-    g.addColorStop(0,color);
-    g.addColorStop(1,'#0fffc2');
-    ctx.fillStyle = g;
-  } else ctx.fillStyle = color;
-
-  roundRect(ctx, px+pad, py+pad, gridSize-2*pad, gridSize-2*pad, 6);
-  ctx.fill();
-}
-
-function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y, x+w,y+h, r);
-  ctx.arcTo(x+w,y+h, x,y+h, r);
-  ctx.arcTo(x,y+h, x,y, r);
-  ctx.arcTo(x,y, x+w,y, r);
-  ctx.closePath();
-}
-
-window.addEventListener('keydown', e => {
-  const k = e.key;
-
-  let moved = false;
-
-  if(k==='ArrowUp'||k==='w'||k==='W'){ nextDir={x:0,y:-1}; moved = true; }
-  if(k==='ArrowDown'||k==='s'||k==='S'){ nextDir={x:0,y:1}; moved = true; }
-  if(k==='ArrowLeft'||k==='a'||k==='A'){ nextDir={x:-1,y:0}; moved = true; }
-  if(k==='ArrowRight'||k==='d'||k==='D'){ nextDir={x:1,y:0}; moved = true; }
-
-  if(moved){
-    if(dead){
-      resetGame();
-      startGame();
-    } else if(!running){
-      startGame();
+        ctx.fillStyle="#ff2e55";
+        ctx.fillRect(food.x, food.y, grid-2, grid-2);
     }
-  }
 
-  if(k===' '){
-    if(dead){
-      resetGame();
-    } else if(!running){
-      startGame();
+    function update() {
+        const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+        if (head.x<0 || head.x>=canvas.width || head.y<0 || head.y>=canvas.height)
+            return gameOver();
+
+        for (let p of snake)
+            if (p.x===head.x && p.y===head.y) return gameOver();
+
+        snake.unshift(head);
+
+        if (head.x===food.x && head.y===food.y) {
+            score++;
+            document.getElementById("score").textContent = score;
+            placeFood();
+        } else {
+            snake.pop();
+        }
     }
-  }
-});
 
-startBtn.addEventListener('click', startGame);
-resetBtn.addEventListener('click', resetGame);
+    function gameLoop() {
+        update();
+        draw();
+    }
 
-resetGame();
+    let interval;
+    function startGame() {
+        clearInterval(interval);
+        init();
+        interval = setInterval(gameLoop, 100);
+    }
+
+    function resetGame() {
+        clearInterval(interval);
+        init();
+        draw();
+    }
+
+    function gameOver() {
+        clearInterval(interval);
+        alert("Game Over!");
+    }
+
+    document.addEventListener("keydown", e => {
+        if (e.key==="ArrowUp" && dy===0) {dx=0; dy=-grid;}
+        if (e.key==="ArrowDown" && dy===0) {dx=0; dy=grid;}
+        if (e.key==="ArrowLeft" && dx===0) {dx=-grid; dy=0;}
+        if (e.key==="ArrowRight" && dx===0) {dx=grid; dy=0;}
+    });
+
+    draw();
 </script>
 </body>
 </html>
