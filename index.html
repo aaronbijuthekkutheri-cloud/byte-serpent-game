@@ -65,6 +65,10 @@
     
     /* MOBILE STYLES START */
     @media(max-width:720px){
+        .wrap{
+            /* Reduced padding to maximize vertical space */
+            padding: 8px; 
+        }
         .card{
             flex-direction:column;
             padding: 18px; 
@@ -95,6 +99,9 @@
         }
         .hud-footer {
             align-items: center;
+             /* Aggressively reduce margin and padding for Reset All visibility */
+            margin-top: 5px; 
+            padding-top: 5px;
         }
         /* Make canvas fluid on small screens */
         canvas {
@@ -113,12 +120,12 @@
             margin: 15px auto 0;
         }
         
-        /* FIX 4: Hide the large desktop title and info in the HUD */
-        .hud .title, .hud .hint { 
-             display: none; 
+        /* FIX: Hide the Title and Hints in the HUD on mobile */
+        .hud > .title, .hud > .hint { 
+             display: none !important; 
         }
 
-        /* FIX 5: Use a dedicated, smaller area for the start/reset buttons on mobile */
+        /* Use a dedicated, smaller area for the start/reset buttons on mobile */
         #mobile-buttons {
             display: flex;
             gap: 8px;
@@ -127,6 +134,11 @@
             margin: 0 auto 10px auto; 
             padding: 10px 0 0 0;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Ensure the Reset All button uses 100% width on mobile */
+        .hud-footer .btn {
+            width: 100%;
         }
     }
     /* Hide mobile-specific div on desktop */
@@ -242,6 +254,7 @@
       <div class="playwrap">
         <canvas id="game" width="480" height="480"></canvas>
         
+        <!-- Touch Controls remain here, placed right below the canvas -->
         <div class="controls">
             <button id="up-btn" class="control-btn" data-dir="up">▲</button>
             <div id="center-spacer" style="grid-area: center; visibility: hidden;"></div>
@@ -251,6 +264,7 @@
         </div>
         
       </div>
+      <!-- NEW MOBILE BUTTONS CONTAINER (Visible only on mobile via CSS/JS) -->
       <div id="mobile-buttons">
           <button id="start-mobile" class="btn primary">Start</button>
           <button id="reset-mobile" class="btn">Reset</button>
@@ -261,10 +275,12 @@
         <div class="row"><div class="big">Score</div><div id="score">0</div></div>
         <div class="row"><div class="big">Best</div><div id="best">0</div></div>
         <div class="row"><div class="hint">Speed</div><div id="speed">6</div></div>
+        <!-- Desktop start/reset buttons (Hidden on mobile via JS) -->
         <div id="desktop-buttons" style="display:flex;gap:8px">
           <button id="start" class="btn primary">Start</button>
           <button id="reset" class="btn">Reset</button>
         </div>
+        <!-- These hints are hidden on mobile to save vertical space -->
         <div class="hint">Controls: <span class="green-control">Arrow keys</span> / <span class="green-control">WASD</span></div>
         <div class="hint">Try to eat the <span class="red-warning">RED FOOD</span>. Don't hit the <span class="red-warning">WALLS</span> or <span class="red-warning">YOURSELF</span>.</div>
         
@@ -700,7 +716,7 @@ confirmNoBtn.addEventListener('click', () => {
         const playwrap = document.querySelector('.playwrap');
         const hud = document.querySelector('.hud');
         
-        // Desired order on mobile: Playwrap (Canvas/Controls) -> Mobile Buttons -> HUD (Score)
+        // Desired order on mobile: Playwrap (Canvas/Controls) -> Mobile Buttons -> HUD (Score/ResetAll)
         if (card && playwrap && hud && mobileButtonsContainer) {
             // Re-order the children of the card container
             card.appendChild(playwrap); 
