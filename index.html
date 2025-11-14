@@ -87,11 +87,10 @@
         .hud{
             width: 100%; 
             max-width: 480px; 
-            /* 🔥 FINAL FIX: Ensure HUD itself has no top/bottom margin */
-            margin: 0 auto; 
+            margin-top: 0; 
             /* Tighter gap between score rows */
             gap: 5px; 
-            /* 🔥 FINAL FIX: Set padding to 0, 0, 10px, 0. This is the main score container. */
+            /* 🔥 FIX 2: Remove top padding from HUD to pull score rows up immediately after mobile buttons */
             padding: 0 0 10px 0; 
         }
         .hud .row{
@@ -121,7 +120,7 @@
         }
         .playwrap {
             margin-top: 0; 
-            /* Remove bottom padding from playwrap to pull the score section up */
+            /* 🔥 FIX 1: Remove bottom padding from playwrap to pull the score section up */
             padding-bottom: 0; 
             width: 100%;
         }
@@ -141,22 +140,22 @@
             margin-bottom: 8px; /* Slightly reduced margin */
         }
 
-        /* Mobile Buttons Row (Start/Reset) - Only visible when game is not running */
+        /* Mobile Buttons Row (Start/Reset) */
         #mobile-buttons-row {
             display: flex;
             gap: 8px;
             max-width: 300px;
             width: 100%;
-            /* Removed all margin/padding around this row, relying on margin from controls only */
-            margin: 0 auto 0 auto; 
+            /* Remove margin-top to pull this section right up to the controls */
+            margin: 0 auto 10px auto; 
             padding: 10px 0 0 0;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* Mobile Button for Reset All is placed immediately after the speed row */
+        /* 🔥 FIX 3: Mobile Button for Reset All is now tight against the score/speed rows */
         #mobile-reset-all-container {
             display: flex;
-            /* Top margin to slightly separate it from the Speed row (which is the element right before it) */
+            /* Added margin-top to separate it slightly from the Speed row */
             margin: 10px auto 0 auto; 
             padding-top: 5px; 
             border-top: 1px solid rgba(255, 255, 255, 0.05); 
@@ -771,7 +770,7 @@ confirmNoBtn.addEventListener('click', () => {
         
         // Final order on mobile:
         // 1. Playwrap (Title, Canvas, Controls)
-        // 2. Mobile Buttons Row (Start/Reset) - Hidden when game starts
+        // 2. Mobile Buttons Row (Start/Reset)
         // 3. HUD (Score/Best/Speed + Reset All)
 
         if (card && playwrap && hud && mobileButtonsRow) {
