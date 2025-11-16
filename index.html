@@ -395,6 +395,7 @@ let tickTimer = null;
 
 let running = false;
 let dead = false;
+let canReset = true; // 🔥 NEW FLAG: Controls when game can be reset/started after death
 
 let score = 0;
 let best = Number(localStorage.getItem('snake_best') || 0);
@@ -402,18 +403,18 @@ bestEl.textContent = best;
 
 // Function to handle direction setting (used by both keyboard and buttons)
 function setDirection(newDir) {
-  nextDir = newDir;
-  
-  // --- MODIFICATION START ---
-  if (dead) {
-    // If dead, the first direction press just resets the game and waits for a second input to start.
-    resetGame();
-    // DO NOT call startGame() here.
-  } else if (!running) {
-    // If not running (but not dead, e.g., first start or after a manual reset), a direction press starts the game.
-    startGame();
-  }
-  // --- MODIFICATION END ---
+    nextDir = newDir;
+    
+    // Check the new canReset flag
+    if (!canReset) return; 
+
+    if (dead) {
+        // If dead and canReset is true, the first input resets the game.
+        resetGame();
+    } else if (!running) {
+        // If not running (initial state or after reset), an input starts the game.
+        startGame();
+    }
 }
 
 // Function to simulate the click animation
@@ -473,275 +474,292 @@ function showResetAllConfirmation() {
 
 // RESET GAME
 function resetGame(){
-  snake = [{ x: Math.floor(cols/2), y: Math.floor(rows/2) }];
-  dir = {x:1, y:0};
-  nextDir = {x:1, y:0};
+    // Check the new canReset flag for external calls (like buttons)
+    // Internal calls (from executeResetAll or initialization) don't need this check.
+    if (dead && !canReset) return; 
+    
 
-  placeFood();
-  score = 0;
-  tickInterval = 1000 / 6;
+    snake = [{ x: Math.floor(cols/2), y: Math.floor(rows/2) }];
+    dir = {x:1, y:0};
+    nextDir = {x:1, y:0};
 
-  running = false;
-  dead = false;
+    placeFood();
+    score = 0;
+    tickInterval = 1000 / 6;
 
-  clearInterval(tickTimer);
-  updateHud();
-  
-  // Reset styles on game reset
-  desktopTitleEl.style.color = '';
-  desktopTitleEl.style.textShadow = '';
-  mobileTitleEl.style.color = ''; 
-  mobileTitleEl.style.textShadow = ''; 
-  canvas.style.boxShadow = '';
-  
-  // Set ALL elements to "alive" green color (var(--accent) is #22c55e)
-  scoreLabelEl.style.color = 'var(--accent)';
-  scoreEl.style.color = 'var(--accent)';
-  bestLabelEl.style.color = 'var(--accent)';
-  bestEl.style.color = 'var(--accent)';
-  
-  draw();
+    running = false;
+    dead = false;
+    canReset = true; // Always allow reset when initializing or manually resetting
+
+    clearInterval(tickTimer);
+    updateHud();
+    
+    // Reset styles on game reset
+    desktopTitleEl.style.color = '';
+    desktopTitleEl.style.textShadow = '';
+    mobileTitleEl.style.color = ''; 
+    mobileTitleEl.style.textShadow = ''; 
+    canvas.style.boxShadow = '';
+    
+    // Set ALL elements to "alive" green color (var(--accent) is #22c55e)
+    scoreLabelEl.style.color = 'var(--accent)';
+    scoreEl.style.color = 'var(--accent)';
+    bestLabelEl.style.color = 'var(--accent)';
+    bestEl.style.color = 'var(--accent)';
+    
+    draw();
 }
 
 function placeFood(){
-  while(true){
-    const x = Math.floor(Math.random()*cols);
-    const y = Math.floor(Math.random()*rows);
-    if(!snake.some(s => s.x===x && s.y===y)){
-      food = {x,y};
-      return;
+    while(true){
+        const x = Math.floor(Math.random()*cols);
+        const y = Math.floor(Math.random()*rows);
+        if(!snake.some(s => s.x===x && s.y===y)){
+            food = {x,y};
+            return;
+        }
     }
-  }
 }
 
 function startGame(){
-  if(running || dead) return;
-  running = true;
-  restartTicker();
+    // Check the new canReset flag
+    if (!canReset) return; 
+    
+    if(running || dead) return;
+    running = true;
+    restartTicker();
 }
 
 function restartTicker(){
-  clearInterval(tickTimer);
-  tickTimer = setInterval(step, tickInterval);
+    clearInterval(tickTimer);
+    tickTimer = setInterval(step, tickInterval);
 }
 
 function step(){
-  if(nextDir.x !== -dir.x || nextDir.y !== -dir.y){
-    dir = nextDir;
-  }
-
-  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-
-  if(head.x<0 || head.x>=cols || head.y<0 || head.y>=rows){
-    gameOver(); return;
-  }
-  if(snake.some(s => s.x===head.x && s.y===head.y)){
-    gameOver(); return;
-  }
-
-  snake.unshift(head);
-
-  if(head.x === food.x && head.y === food.y){
-    score++;
-    placeFood();
-
-    if(score % 3 === 0){
-      tickInterval = Math.max(40, tickInterval * 0.9);
-      restartTicker();
+    if(nextDir.x !== -dir.x || nextDir.y !== -dir.y){
+        dir = nextDir;
     }
-  } else {
-    snake.pop();
-  }
 
-  updateHud();
-  draw();
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+    if(head.x<0 || head.x>=cols || head.y<0 || head.y>=rows){
+        gameOver(); return;
+    }
+    if(snake.some(s => s.x===head.x && s.y===head.y)){
+        gameOver(); return;
+    }
+
+    snake.unshift(head);
+
+    if(head.x === food.x && head.y === food.y){
+        score++;
+        placeFood();
+
+        if(score % 3 === 0){
+            tickInterval = Math.max(40, tickInterval * 0.9);
+            restartTicker();
+        }
+    } else {
+        snake.pop();
+    }
+
+    updateHud();
+    draw();
 }
 
 function gameOver(){
-  running = false;
-  dead = true;
-  clearInterval(tickTimer);
+    running = false;
+    dead = true;
+    clearInterval(tickTimer);
+    
+    // 🔥 NEW LOGIC: Prevent reset for 3 seconds
+    canReset = false;
+    setTimeout(() => {
+        canReset = true;
+    }, 3000); // 3000 milliseconds = 3 seconds
 
-  const isNewBest = score > best;
+    const isNewBest = score > best;
 
-  if(isNewBest){
-    best = score;
-    localStorage.setItem('snake_best', String(best));
-  }
-  updateHud();
+    if(isNewBest){
+        best = score;
+        localStorage.setItem('snake_best', String(best));
+    }
+    updateHud();
 
-  // Define colors
-  const redColor = '#ff4444';
-  const redGlow = '0 0 8px rgba(255, 68, 68, 0.5)';
-  
-  const goldColor = '#FFD700'; // Gold color for new record
-  const goldGlow = '0 0 10px 5px rgba(255, 215, 0, 0.4)';
-  
-  let primaryColor, shadowGlow, canvasGlow;
-  
-  if (isNewBest) {
-    primaryColor = goldColor;
-    shadowGlow = '0 0 8px ' + primaryColor;
-    canvasGlow = goldGlow;
-  } else {
-    primaryColor = redColor;
-    shadowGlow = redGlow;
-    canvasGlow = '0 0 0 4px rgba(255, 50, 50, 0.3)';
-  }
+    // Define colors
+    const redColor = '#ff4444';
+    const redGlow = '0 0 8px rgba(255, 68, 68, 0.5)';
+    
+    const goldColor = '#FFD700'; // Gold color for new record
+    const goldGlow = '0 0 10px 5px rgba(255, 215, 0, 0.4)';
+    
+    let primaryColor, shadowGlow, canvasGlow;
+    
+    if (isNewBest) {
+        primaryColor = goldColor;
+        shadowGlow = '0 0 8px ' + primaryColor;
+        canvasGlow = goldGlow;
+    } else {
+        primaryColor = redColor;
+        shadowGlow = redGlow;
+        canvasGlow = '0 0 0 4px rgba(255, 50, 50, 0.3)';
+    }
 
-  // Apply colors and glows
-  canvas.style.boxShadow = canvasGlow;
-  
-  // Apply styling to BOTH titles
-  desktopTitleEl.style.color = primaryColor;
-  desktopTitleEl.style.textShadow = shadowGlow;
-  mobileTitleEl.style.color = primaryColor;
-  mobileTitleEl.style.textShadow = shadowGlow;
-  
-  // Score is always colored by the primary color (Red or Gold)
-  scoreLabelEl.style.color = primaryColor;
-  scoreEl.style.color = primaryColor;
-  
-  // Best is only colored by the primary color (Gold) if it's a new best, otherwise it retains green.
-  if (isNewBest) {
-    bestLabelEl.style.color = primaryColor;
-    bestEl.style.color = primaryColor;
-  }
+    // Apply colors and glows
+    canvas.style.boxShadow = canvasGlow;
+    
+    // Apply styling to BOTH titles
+    desktopTitleEl.style.color = primaryColor;
+    desktopTitleEl.style.textShadow = shadowGlow;
+    mobileTitleEl.style.color = primaryColor;
+    mobileTitleEl.style.textShadow = shadowGlow;
+    
+    // Score is always colored by the primary color (Red or Gold)
+    scoreLabelEl.style.color = primaryColor;
+    scoreEl.style.color = primaryColor;
+    
+    // Best is only colored by the primary color (Gold) if it's a new best, otherwise it retains green.
+    if (isNewBest) {
+        bestLabelEl.style.color = primaryColor;
+        bestEl.style.color = primaryColor;
+    }
 
-  draw();
+    draw();
 }
 
 function updateHud(){
-  scoreEl.textContent = score;
-  bestEl.textContent = best;
-  speedEl.textContent = Math.round(1000/tickInterval);
+    scoreEl.textContent = score;
+    bestEl.textContent = best;
+    speedEl.textContent = Math.round(1000/tickInterval);
 }
 
 function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#03151b';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#03151b';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // FOOD → RED
-  drawCell(food.x, food.y, '#ff4444');
+    // FOOD → RED
+    drawCell(food.x, food.y, '#ff4444');
 
-  for(let i=snake.length-1;i>=0;i--){
-    const s = snake[i];
-    if(i===0) drawCell(s.x,s.y,'#8ef7b6', true, dir); // Pass 'dir' for head
-    else drawCell(s.x,s.y,'#1de38a');
-  }
-
-  // Draw grid lines, making the outer ones brighter and thicker
-  for(let x=0;x<=cols;x++){
-    if(x === 0 || x === cols){
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 2;
-    } else {
-      ctx.strokeStyle = 'rgba(255,255,255,0.02)';
-      ctx.lineWidth = 1;
+    for(let i=snake.length-1;i>=0;i--){
+        const s = snake[i];
+        if(i===0) drawCell(s.x,s.y,'#8ef7b6', true, dir); // Pass 'dir' for head
+        else drawCell(s.x,s.y,'#1de38a');
     }
-    ctx.beginPath(); ctx.moveTo(x*gridSize,0); ctx.lineTo(x*gridSize,canvas.height); ctx.stroke();
-  }
-  for(let y=0;y<=rows;y++){
-    if(y === 0 || y === rows){
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 2;
-    } else {
-      ctx.strokeStyle = 'rgba(255,255,255,0.02)';
-      ctx.lineWidth = 1;
+
+    // Draw grid lines, making the outer ones brighter and thicker
+    for(let x=0;x<=cols;x++){
+        if(x === 0 || x === cols){
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 2;
+        } else {
+            ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+            ctx.lineWidth = 1;
+        }
+        ctx.beginPath(); ctx.moveTo(x*gridSize,0); ctx.lineTo(x*gridSize,canvas.height); ctx.stroke();
     }
-    ctx.beginPath(); ctx.moveTo(0,y*gridSize); ctx.lineTo(canvas.width,y*gridSize); ctx.stroke();
-  }
-  ctx.lineWidth = 1; // Reset line width
+    for(let y=0;y<=rows;y++){
+        if(y === 0 || y === rows){
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 2;
+        } else {
+            ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+            ctx.lineWidth = 1;
+        }
+        ctx.beginPath(); ctx.moveTo(0,y*gridSize); ctx.lineTo(canvas.width,y*gridSize); ctx.stroke();
+    }
+    ctx.lineWidth = 1; // Reset line width
 }
 
 function drawCell(cx, cy, color, isHead=false, currentDir = {x:1, y:0}){ // Added currentDir parameter
-  const px = cx * gridSize;
-  const py = cy * gridSize;
-  const pad = 2;
+    const px = cx * gridSize;
+    const py = cy * gridSize;
+    const pad = 2;
 
-  if(isHead){
-    const g = ctx.createLinearGradient(px,py,px+gridSize,py+gridSize);
-    g.addColorStop(0,color);
-    g.addColorStop(1,'#0fffc2');
-    ctx.fillStyle = g;
-  } else ctx.fillStyle = color;
+    if(isHead){
+        const g = ctx.createLinearGradient(px,py,px+gridSize,py+gridSize);
+        g.addColorStop(0,color);
+        g.addColorStop(1,'#0fffc2');
+        ctx.fillStyle = g;
+    } else ctx.fillStyle = color;
 
-  roundRect(ctx, px+pad, py+pad, gridSize-2*pad, gridSize-2*pad, 6);
-  ctx.fill();
-
-  // Draw arrow on snake head
-  if(isHead) {
-    ctx.fillStyle = '#ff4444'; // Arrow color (RED for contrast)
-    ctx.beginPath();
-
-    const arrowSize = gridSize * 0.25; // Smaller size of the arrow relative to the cell
-    const centerX = px + gridSize / 2;
-    const centerY = py + gridSize / 2;
-
-    if (currentDir.x === 1) { // Right
-        ctx.moveTo(centerX + arrowSize/2, centerY);
-        ctx.lineTo(centerX - arrowSize/2, centerY - arrowSize/2);
-        ctx.lineTo(centerX - arrowSize/2, centerY + arrowSize/2);
-    } else if (currentDir.x === -1) { // Left
-        ctx.moveTo(centerX - arrowSize/2, centerY);
-        ctx.lineTo(centerX + arrowSize/2, centerY - arrowSize/2);
-        ctx.lineTo(centerX + arrowSize/2, centerY + arrowSize/2);
-    } else if (currentDir.y === 1) { // Down
-        ctx.moveTo(centerX, centerY + arrowSize/2);
-        ctx.lineTo(centerX - arrowSize/2, centerY - arrowSize/2);
-        ctx.lineTo(centerX + arrowSize/2, centerY - arrowSize/2);
-    } else if (currentDir.y === -1) { // Up
-        ctx.moveTo(centerX, centerY - arrowSize/2);
-        ctx.lineTo(centerX - arrowSize/2, centerY + arrowSize/2);
-        ctx.lineTo(centerX + arrowSize/2, centerY + arrowSize/2);
-    }
-    ctx.closePath();
+    roundRect(ctx, px+pad, py+pad, gridSize-2*pad, gridSize-2*pad, 6);
     ctx.fill();
-  }
+
+    // Draw arrow on snake head
+    if(isHead) {
+        ctx.fillStyle = '#ff4444'; // Arrow color (RED for contrast)
+        ctx.beginPath();
+
+        const arrowSize = gridSize * 0.25; // Smaller size of the arrow relative to the cell
+        const centerX = px + gridSize / 2;
+        const centerY = py + gridSize / 2;
+
+        if (currentDir.x === 1) { // Right
+            ctx.moveTo(centerX + arrowSize/2, centerY);
+            ctx.lineTo(centerX - arrowSize/2, centerY - arrowSize/2);
+            ctx.lineTo(centerX - arrowSize/2, centerY + arrowSize/2);
+        } else if (currentDir.x === -1) { // Left
+            ctx.moveTo(centerX - arrowSize/2, centerY);
+            ctx.lineTo(centerX + arrowSize/2, centerY - arrowSize/2);
+            ctx.lineTo(centerX + arrowSize/2, centerY + arrowSize/2);
+        } else if (currentDir.y === 1) { // Down
+            ctx.moveTo(centerX, centerY + arrowSize/2);
+            ctx.lineTo(centerX - arrowSize/2, centerY - arrowSize/2);
+            ctx.lineTo(centerX + arrowSize/2, centerY - arrowSize/2);
+        } else if (currentDir.y === -1) { // Up
+            ctx.moveTo(centerX, centerY - arrowSize/2);
+            ctx.lineTo(centerX - arrowSize/2, centerY + arrowSize/2);
+            ctx.lineTo(centerX + arrowSize/2, centerY + arrowSize/2);
+        }
+        ctx.closePath();
+        ctx.fill();
+    }
 }
 
 function roundRect(ctx,x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y);
-  ctx.arcTo(x+w,y, x+w,y+h, r);
-  ctx.arcTo(x+w,y+h, x,y+h, r);
-  ctx.arcTo(x,y+h, x,y, r);
-  ctx.arcTo(x,y, x+w,y, r);
-  ctx.closePath();
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y, x+w,y+h, r);
+    ctx.arcTo(x+w,y+h, x,y+h, r);
+    ctx.arcTo(x,y+h, x,y, r);
+    ctx.arcTo(x,y, x+w,y, r);
+    ctx.closePath();
 }
 
 // KEYBOARD INPUT + AUTO-START AFTER DEATH
 window.addEventListener('keydown', e => {
-  const k = e.key;
+    const k = e.key;
 
-  let newDir = null;
+    let newDir = null;
 
-  if(k==='ArrowUp'||k==='w'||k==='W'){ newDir={x:0,y:-1}; }
-  if(k==='ArrowDown'||k==='s'||k==='S'){ newDir={x:0,y:1}; }
-  if(k==='ArrowLeft'||k==='a'||k==='A'){ newDir={x:-1,y:0}; }
-  if(k==='ArrowRight'||k==='d'||k==='D'){ newDir={x:1,y:0}; }
+    if(k==='ArrowUp'||k==='w'||k==='W'){ newDir={x:0,y:-1}; }
+    if(k==='ArrowDown'||k==='s'||k==='S'){ newDir={x:0,y:1}; }
+    if(k==='ArrowLeft'||k==='a'||k==='A'){ newDir={x:-1,y:0}; }
+    if(k==='ArrowRight'||k==='d'||k==='D'){ newDir={x:1,y:0}; }
 
-  if(newDir){
-    // 1. Prevent the default action (like scrolling) for movement keys
-    e.preventDefault(); 
-    
-    // 2. Simulate the button press animation
-    simulateKeyPress(k);
-    
-    // 3. Set the direction and potentially start the game
-    setDirection(newDir);
-  }
-
-  if(k===' '){
-    // Prevent the default action (like scrolling) for the Spacebar
-    e.preventDefault(); 
-    if(dead){
-      resetGame();
-    } else if(!running){
-      startGame();
+    if(newDir){
+        // 1. Prevent the default action (like scrolling) for movement keys
+        e.preventDefault(); 
+        
+        // 2. Simulate the button press animation
+        simulateKeyPress(k);
+        
+        // 3. Set the direction and potentially reset/start the game
+        setDirection(newDir);
     }
-  }
+
+    if(k===' '){
+        e.preventDefault(); 
+        // Check the new canReset flag
+        if (!canReset) return; 
+
+        if(dead){
+            resetGame();
+        } else if(!running){
+            startGame();
+        }
+    }
 });
 
 // DESKTOP button listeners
